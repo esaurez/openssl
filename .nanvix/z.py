@@ -98,6 +98,8 @@ _GENERATED_HEADERS: list[str] = [
 _BUILD_OUTPUTS: list[str] = [
     "libcrypto.a",
     "libssl.a",
+    "libcrypto.so",
+    "libssl.so",
     _TEST_ELF,
     *(f"include/openssl/{h}" for h in _GENERATED_HEADERS),
 ]
@@ -270,10 +272,12 @@ class OpenSSLBuild(ZScript):
         repo = self.repo_root
         libcrypto = repo / "libcrypto.a"
         libssl = repo / "libssl.a"
+        libcrypto_so = repo / "libcrypto.so"
+        libssl_so = repo / "libssl.so"
         headers_dir = repo / "include" / "openssl"
         test_elf = repo / _TEST_ELF
 
-        for path in (libcrypto, libssl, headers_dir):
+        for path in (libcrypto, libssl, libcrypto_so, libssl_so, headers_dir):
             if not path.exists():
                 log.fatal(
                     f"release: missing artefact {path}",
@@ -300,6 +304,8 @@ class OpenSSLBuild(ZScript):
         # Copy libraries.
         shutil.copy2(libcrypto, sysroot / "lib" / "libcrypto.a")
         shutil.copy2(libssl, sysroot / "lib" / "libssl.a")
+        shutil.copy2(libcrypto_so, sysroot / "lib" / "libcrypto.so")
+        shutil.copy2(libssl_so, sysroot / "lib" / "libssl.so")
 
         # Copy headers.
         for h in sorted(headers_dir.glob("*.h")):
@@ -441,6 +447,8 @@ class OpenSSLBuild(ZScript):
         required = {
             "sysroot/lib/libcrypto.a",
             "sysroot/lib/libssl.a",
+            "sysroot/lib/libcrypto.so",
+            "sysroot/lib/libssl.so",
         }
         with tarfile.open(tarball, "r:gz") as tf:
             members = set(tf.getnames())
